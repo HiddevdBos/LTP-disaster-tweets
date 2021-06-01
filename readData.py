@@ -50,7 +50,7 @@ def transform_data(data):
             for w in sentence:
                 data_temp_sentence.append(get_index(w,word2idx))
             data_temp.append(np.array(data_temp_sentence))
-    return np.array(data_temp)
+    return np.array(data_temp), len(word2idx)
 
 #From Exercise 3
 #TODO add max_length?
@@ -63,13 +63,24 @@ def convert_to_indices(X, max_length = 50):
         out.append(indices)
     return np.array(out)
 
+#From Exercise 3
+def convert_to_n_hot(X, vocab_size):
+    out = []
+    for instance in X:
+        n_hot = np.zeros(vocab_size)
+        for w_idx in instance:
+            n_hot[w_idx] = 1
+        out.append(n_hot)
+    return np.array(out)
+
 
 # load data, change data to floats and get data to gpu (if cuda available)
 def get_data(path):
     data, labels = load_data(path)
-    data = transform_data(data)
-    data = convert_to_indices(data)
-    data = torch.tensor(data, dtype=torch.int64)
+    data, vocab_size = transform_data(data)
+    data = convert_to_n_hot(data, vocab_size)
+    # data = convert_to_indices(data)
+    data = torch.tensor(data, dtype=torch.float32)
     labels = torch.tensor(labels)
     if torch.cuda.is_available():
         data = data.cuda()
