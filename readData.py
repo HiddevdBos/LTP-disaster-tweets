@@ -75,12 +75,15 @@ def convert_to_n_hot(X, vocab_size):
 
 
 # load data, change data to floats and get data to gpu (if cuda available)
-def get_data(path):
+def get_data(path, network):
     data, labels = load_data(path)
     data, vocab_size = transform_data(data)
-    data = convert_to_n_hot(data, vocab_size)
-    # data = convert_to_indices(data)
-    data = torch.tensor(data, dtype=torch.float32)
+    if network == "embedding":
+        data = convert_to_indices(data)
+        data = torch.tensor(data, dtype=torch.int32)
+    if network == "linear":
+        data = convert_to_n_hot(data, vocab_size)
+        data = torch.tensor(data, dtype=torch.float32)
     labels = torch.tensor(labels)
     if torch.cuda.is_available():
         data = data.cuda()
