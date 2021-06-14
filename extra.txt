@@ -1,0 +1,19 @@
+def get_data(path):
+    cols = ['target','text']
+    data = pd.read_csv(path, usecols=cols)
+    train_data = data['text'].values
+    train_labels = data['target'].values
+    data, vocab_size = transform_data(train_data)
+    data = convert_to_n_hot(data, vocab_size)
+    # data = convert_to_indices(data)
+    data = torch.tensor(data, dtype=torch.float32)
+    labels = torch.tensor(train_labels)
+    if torch.cuda.is_available():
+        data = data.cuda()
+        labels = labels.cuda()
+    return data, labels
+
+
+615358
+
+6090

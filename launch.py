@@ -4,7 +4,7 @@ from readData import get_data
 from runModel import cross_validation
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--network', help="type of network", type=str, default="embedding")
+parser.add_argument('--network', help="type of network", type=str, default="linear")
 args = parser.parse_args()
 
 

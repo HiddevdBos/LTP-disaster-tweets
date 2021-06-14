@@ -7,19 +7,20 @@ from tqdm import tqdm
 from NN import NN
 
 def train_model(train_x, train_y, network):
-    
+
     batch_size = train_x.shape[0]
     num_batches = int(train_x.shape[0] / batch_size)
-    
     train_x = train_x[(train_x.shape[0] % batch_size):]
     train_y = train_y[(train_y.shape[0] % batch_size):]
 
     train_x = train_x.reshape(num_batches, -1, train_x.shape[1])
     train_y = train_y.reshape(-1, batch_size)
-    
+
     model = NN(train_x.shape[2], 2)
     optimizer = optim.Adam(model.parameters())
     criterion = nn.CrossEntropyLoss()
+
+
 
     if torch.cuda.is_available():
         model = model.cuda()
@@ -59,7 +60,8 @@ def cross_validation(data, labels, k, network):
         train_x = torch.cat(train_x)
         train_y = torch.cat(train_y)
 
-        model = train_model (train_x, train_y, network)
+
+        model = train_model(train_x, train_y, network)
         acc_train = evaluate_model(model, train_x, train_y, network)
         acc_valid = evaluate_model(model, valid_x, valid_y, network)
         
