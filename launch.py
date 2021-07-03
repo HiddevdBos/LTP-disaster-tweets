@@ -1,7 +1,7 @@
 import sys
 import argparse
-from readData import get_data
-from runModel import cross_validation
+from readData import get_data, get_test_data
+from runModel import cross_validation, make_prediction
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--network', help="type of network", type=str, default="linear")
@@ -14,6 +14,8 @@ def show_error():
 
 
 if __name__ == '__main__':
-    train_data, train_labels = get_data('data/train.csv', args.network)
-    cross_validation(train_data, train_labels, 5, args.network)
-    # test_data, test_labels = get_test_data('data/test.csv')
+    train_data, train_labels, word2idx = get_data('data/train.csv', args.network)
+    model = cross_validation(train_data, train_labels, 5, args.network)
+    
+    test_data = get_test_data('data/test.csv', args.network, word2idx)
+    make_prediction(model, test_data, args.network)

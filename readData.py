@@ -2,7 +2,6 @@ import sys
 import numpy as np
 import pandas as pd
 import torch
-from nltk.corpus import stopwords
 import re
 
 
@@ -31,11 +30,20 @@ def transform_data(data):
         for w in sentence:
             data_temp_sentence.append(get_index(w, word2idx))
         data_temp.append(np.array(data_temp_sentence))
+    return np.array(data_temp), len(word2idx), word2idx
+
+
+def transform_test_data(data, word2idx):
+    data_temp = []
+    for sentence in data:
+        sentence = sentence.split(" ")
+        data_temp_sentence = []
+        for w in sentence:
+            data_temp_sentence.append(get_index(w, word2idx, freeze=True))
+        data_temp.append(np.array(data_temp_sentence))
     return np.array(data_temp), len(word2idx)
 
-
 # From Exercise 3
-# TODO add max_length?
 def convert_to_indices(X, max_length=54):
     out = []
     for instance in X:
@@ -53,7 +61,6 @@ def data_preprocess(sentence):
     remove urls
     remove special characters
     '''
-    # my_stopwords = stopwords.words('english')
     sentence = sentence.lower()
     sentence = re.sub(r"[^a-zA-Z?.!,¿]+", " ",sentence)
     sentence = re.sub(r"http\S+", "",sentence)    
@@ -65,10 +72,7 @@ def data_preprocess(sentence):
     characters = "/><|{}^@#!?+();$=&*[]-%.:_`''" 
     for c in characters:
         sentence = sentence.replace(c,'')
-        
-    # sentence = [word.lower() for word in sentence.split() if word.lower() not in my_stopwords]
-    # cleaned_sentence = " ".join(sentence)
-    
+            
     ## This section is taken from another project to refer emojis on twitter tweets
     
     emoji_pattern = re.compile("["
@@ -102,7 +106,7 @@ def get_data(path, network):
     data['text'] = data['text'].apply(lambda x: data_preprocess(x))
     train_data = data['text'].values
     train_labels = data['target'].values
-    data, vocab_size = transform_data(train_data)
+    data, vocab_size, word2idx = transform_data(train_data)
     if network == "embedding":
         data = convert_to_indices(data)
         data = torch.tensor(data, dtype=torch.int32)
@@ -113,4 +117,19 @@ def get_data(path, network):
     if torch.cuda.is_available():
         data = data.cuda()
         labels = labels.cuda()
-    return data, labels
+    return data, labels, word2idx
+
+
+def get_test_data(path, network, word2idx):
+    data = pd.read_csv(path, usecols=["text"])
+    data = data['text'].apply(lambda x: data_preprocess(x)).values
+    data, vocab_size = transform_test_data(data, word2idx)
+    if network == "embedding":
+        data = convert_to_indices(data)
+        data = torch.tensor(data, dtype=torch.int32)
+    if network == "linear":
+        data = convert_to_n_hot(data, vocab_size)
+        data = torch.tensor(data, dtype=torch.float32)
+    if torch.cuda.is_available():
+        data = data.cuda()
+    return data

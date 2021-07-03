@@ -2,13 +2,17 @@ import torch
 import torch.nn as nn
 import torch.optim as optim
 import numpy as np
+import pandas as pd
 from tqdm import tqdm
+import csv 
 
 from NN import NN
 
 def train_model(train_x, train_y, network):
 
     batch_size = train_x.shape[0]
+    # batch_size = 100
+
     num_batches = int(train_x.shape[0] / batch_size)
     train_x = train_x[(train_x.shape[0] % batch_size):]
     train_y = train_y[(train_y.shape[0] % batch_size):]
@@ -19,8 +23,6 @@ def train_model(train_x, train_y, network):
     model = NN(train_x.shape[2], 2)
     optimizer = optim.Adam(model.parameters())
     criterion = nn.CrossEntropyLoss()
-
-
 
     if torch.cuda.is_available():
         model = model.cuda()
@@ -42,6 +44,7 @@ def train_model(train_x, train_y, network):
 
 def evaluate_model(model, data, labels, network):
     output = model.forward(data, network)
+    # print(data.size())
     total = labels.size(0)
     _, predicted = torch.max(output.data, 1)
     correct = (predicted == labels).sum()
@@ -72,3 +75,23 @@ def cross_validation(data, labels, k, network):
     acc_valid_mean = acc_valid_mean / k
 
     print("training accuracy = ", acc_train_mean.item(), "validation accuracy = ", acc_valid_mean.item())
+
+    return model
+
+def make_prediction(model, data, network):
+    output = model.forward(data, network)
+    _, predicted = torch.max(output.data, 1)
+    ids = pd.read_csv('data/test.csv', usecols=["id"]).values
+    # print(ids[0][0])
+    with open('output.csv', 'w') as csvfile: 
+        csvwriter = csv.writer(csvfile) 
+        csvwriter.writerow(['id', 'target'])
+        for idx, prediction in enumerate(predicted):
+            csvwriter.writerow([ids[idx][0], prediction.item()])
+            # print(idx[idx])
+
+    # f = open("output.txt","w+")
+        # f.write(str(i.item()))
+        # f.write('\n')
+
+    # print(predicted)
