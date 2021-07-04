@@ -5,7 +5,7 @@ import torch
 import re
 
 
-# From Exercise 3
+# From Exercise 3, gets index of a word and if not frozen adds it to word2idx if unknown
 def get_index(word, word2idx, freeze=False):
     """
     map words to indices
@@ -20,7 +20,7 @@ def get_index(word, word2idx, freeze=False):
         else:
             return word2idx["_UNK"]
 
-
+# transform data via a word2idx dictionary
 def transform_data(data):
     data_temp = []
     word2idx = {"_UNK": 0}  # reserve 0 for OOV
@@ -32,7 +32,7 @@ def transform_data(data):
         data_temp.append(np.array(data_temp_sentence))
     return np.array(data_temp), len(word2idx), word2idx
 
-
+# transform the test data using word2idx dictionary, with word2idx already given and get_index frozen
 def transform_test_data(data, word2idx):
     data_temp = []
     for sentence in data:
@@ -43,7 +43,7 @@ def transform_test_data(data, word2idx):
         data_temp.append(np.array(data_temp_sentence))
     return np.array(data_temp), len(word2idx)
 
-# From Exercise 3
+# From Exercise 3, converts the words to indices
 def convert_to_indices(X, max_length=54):
     out = []
     for instance in X:
@@ -53,7 +53,7 @@ def convert_to_indices(X, max_length=54):
         out.append(indices)
     return np.array(out)
 
-#preprocess
+#preprocess the data, same function as used in BERT
 def data_preprocess(sentence):
     '''
     lowercase the sentence
@@ -83,12 +83,11 @@ def data_preprocess(sentence):
                            u"\U00002702-\U000027B0"
                            u"\U000024C2-\U0001F251"
                            "]+", flags=re.UNICODE)
-    #print(sentence)
     sentence = emoji_pattern.sub(r'', sentence)
     return sentence
 
 
-# From Exercise 3
+# From Exercise 3, convert data using n-hot encoding
 def convert_to_n_hot(X, vocab_size):
     out = []
     for instance in X:
@@ -103,6 +102,7 @@ def convert_to_n_hot(X, vocab_size):
 def get_data(path, network):
     cols = ['target','text']
     data = pd.read_csv(path, usecols=cols)
+    #preprocess data
     data['text'] = data['text'].apply(lambda x: data_preprocess(x))
     train_data = data['text'].values
     train_labels = data['target'].values
@@ -114,12 +114,13 @@ def get_data(path, network):
         data = convert_to_n_hot(data, vocab_size)
         data = torch.tensor(data, dtype=torch.float32)
     labels = torch.tensor(train_labels)
+    #transfer data to gpu
     if torch.cuda.is_available():
         data = data.cuda()
         labels = labels.cuda()
     return data, labels, word2idx
 
-
+# used for the test data, similar to get_data, but no labels used as they are not known
 def get_test_data(path, network, word2idx):
     data = pd.read_csv(path, usecols=["text"])
     data = data['text'].apply(lambda x: data_preprocess(x)).values
