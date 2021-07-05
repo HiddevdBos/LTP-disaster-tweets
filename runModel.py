@@ -5,6 +5,8 @@ import numpy as np
 import pandas as pd
 from tqdm import tqdm
 import csv 
+from torchviz import make_dot
+
 
 from NN import NN
 
@@ -41,7 +43,7 @@ def train_model(train_x, train_y, network):
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()
-
+    make_dot(prediction, params=dict(list(model.named_parameters()))).render("linear_torchviz", format="png")
     # return the model and the average training loss
     return model
 
@@ -90,7 +92,7 @@ def make_prediction(train_data, train_labels, test_data, network):
     output = model.forward(test_data, network)
     _, predicted = torch.max(output.data, 1)
     ids = pd.read_csv('data/test.csv', usecols=["id"]).values
-    with open('output.csv', 'w') as csvfile: 
+    with open('lstm_embedding_output.csv', 'w') as csvfile:
         csvwriter = csv.writer(csvfile) 
         csvwriter.writerow(['id', 'target'])
         for idx, prediction in enumerate(predicted):
