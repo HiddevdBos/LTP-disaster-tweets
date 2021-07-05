@@ -43,7 +43,11 @@ def train_model(train_x, train_y, network):
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()
+
+    #Visualizing model
     make_dot(prediction, params=dict(list(model.named_parameters()))).render("linear_torchviz", format="png")
+
+
     # return the model and the average training loss
     return model
 
